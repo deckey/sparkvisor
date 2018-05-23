@@ -12,6 +12,10 @@ verbose=0
 # log file location
 log="./error.log"
 
+# output message to a log file
+create_log (){
+    echo $message >> $log;
+}
 # Check if the service is running and restart it if needed
 # Enable -v argument to see output in the console
 # Log every restart attempt for debugging purposes
@@ -26,10 +30,10 @@ check_service() {
     # check if service is not running and restart if attempts threshold is not reached
     if (( $state == "0" )); then
         if (( $times < $attempts )); then
-            message="$dt : Service [$service] not running, restarting ... #$times"
-            printf "$message \n"
-            echo "$message" >> $log;
-            service $service restart
+            message="$dt : Service [$service] not running, restarting ... #$times";
+            printf "$message \n";
+            create_log $message;
+            service $service restart;
             ((times++))
         else
             # attempts exceeded, exit from the script
