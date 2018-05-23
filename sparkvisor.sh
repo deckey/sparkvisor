@@ -18,8 +18,8 @@ log="./error.log"
 check_service() {
     # will output 0 if the service is not running
     state="$(pgrep -x $service | wc -l)";
-    times=1;
     dt=$(date '+%d/%m/%Y %H:%M:%S');
+    # print to console if -v flag is set
     if (( $verbose != "0" )); then
         printf "$dt : [Verbose] Service $service running [wait=$wait] [interval=$interval]\n"
     fi
@@ -30,8 +30,16 @@ check_service() {
             printf "$message \n"
             echo "$message" >> $log;
             service $service restart
+            ((times++))
+        else
+            # attempts exceeded, exit from the script
+            printf "Service failed to start after $times attempts, exiting...! \n"
+            times=1
+            exit 1
         fi
-        ((times++))
+    else 
+        # service running - reset attempts
+        times=1
     fi
 }
 
@@ -40,6 +48,7 @@ supervise () {
     start=$(date '+%d/%m/%Y %H:%M:%S');
     printf "$start : Started supervising $service service  \n"
     # Calling check_services according to wait interval
+    times=1;
     while true;
     do
         check_service;
@@ -84,4 +93,4 @@ fi
 
 # EXAMPLE COMMAND
 # Check mysql daemon process every 30 seconds, try to restart every 5 seconds for 10 times, output log and console
-# sudo ./sparkvisor.sh -s mysqld -i 30 -w 5 -a 10 -v 1 -l myslqd.log 
+# sudo ./sparkvisor.sh -s mysqld -i 30 -w 5 -a 10 -v 1 -l myslqd.log
